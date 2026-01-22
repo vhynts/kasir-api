@@ -1,3 +1,0 @@
-go mod init kasir-api // untuk declare file go.mod
-
-go build // untuk build code jadi .exe
