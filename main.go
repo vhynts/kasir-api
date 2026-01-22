@@ -64,8 +64,17 @@ func getProdukByID(w http.ResponseWriter, r *http.Request) {
 
 	for _, p := range produk {
 		if p.ID == id {
+			produkResponse := ProdukResponse{
+				ID:           p.ID,
+				Nama:         p.Nama,
+				Harga:        p.Harga,
+				Stok:         p.Stok,
+				KategoriID:   p.KategoriID,
+				NamaKategori: getNamaKategori(p.KategoriID),
+			}
+
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(p)
+			json.NewEncoder(w).Encode(produkResponse)
 			return
 		}
 	}
