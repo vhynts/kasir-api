@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"kasir-api/models"
+	"strings"
 	"time"
 )
 
@@ -68,15 +69,39 @@ func (repo *TransactionRepository) CreateTransaction(items []models.CheckoutItem
 	// 	}
 	// }
 
-	stmt, err := tx.Prepare("INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES ($1, $2, $3, $4)")
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
+	// stmt, err := tx.Prepare("INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES ($1, $2, $3, $4)")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// defer stmt.Close()
 
-	for i := range details {
-		details[i].TransactionID = transactionID
-		_, err = stmt.Exec(transactionID, details[i].ProductID, details[i].Quantity, details[i].Subtotal)
+	// for i := range details {
+	// 	details[i].TransactionID = transactionID
+	// 	_, err = stmt.Exec(transactionID, details[i].ProductID, details[i].Quantity, details[i].Subtotal)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+
+	if len(details) > 0 {
+		valueStrings := make([]string, 0, len(details))
+		valueArgs := make([]interface{}, 0, len(details)*4)
+
+		for i, d := range details {
+			// Update struct untuk return value nanti
+			details[i].TransactionID = transactionID
+
+			// Siapkan placeholder ($1, $2, $3, $4), ($5, $6...), dst
+			n := i * 4
+			valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d)", n+1, n+2, n+3, n+4))
+
+			valueArgs = append(valueArgs, transactionID, d.ProductID, d.Quantity, d.Subtotal)
+		}
+
+		stmt := fmt.Sprintf("INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES %s",
+			strings.Join(valueStrings, ","))
+
+		_, err = tx.Exec(stmt, valueArgs...)
 		if err != nil {
 			return nil, err
 		}
